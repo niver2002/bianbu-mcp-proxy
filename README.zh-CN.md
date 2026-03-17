@@ -165,16 +165,52 @@ https://<该域名>/mcp
 
 ---
 
-## AI IDE 里怎么配置
+## 在 AI IDE 里怎么用
 
-对大多数支持远程 HTTP MCP 的 AI IDE，核心填写项都一样：
+### 一段可直接复制的连接信息
 
-- transport：`http` 或 `streamable http`
-- URL：`https://your-domain.example.com/mcp`
-- header 名称：`X-API-KEY`
-- header 值：你的网关 key
+只要 IDE 支持远程 HTTP MCP，通常直接填这几个字段：
+
+```text
+名称: bianbu
+传输方式: HTTP / Streamable HTTP
+URL: https://your-domain.example.com/mcp
+请求头: X-API-KEY
+值: your-x-api-key
+```
+
+最小 JSON 形式：
+
+```json
+{
+  "mcpServers": {
+    "bianbu": {
+      "type": "http",
+      "url": "https://your-domain.example.com/mcp",
+      "headers": {
+        "X-API-KEY": "your-x-api-key"
+      }
+    }
+  }
+}
+```
 
 如果某个 IDE 强制你填写本地 `command`，那说明它只支持本地 stdio MCP，不能直接连接这个远程 HTTP MCP 服务。
+
+### 支持情况速查表
+
+| 工具 | 是否可直接连接远程 HTTP MCP | 常见情况 |
+|---|---|---|
+| Cursor | 支持，前提是当前版本支持 remote MCP | 通常可直接连接 |
+| Windsurf | 支持，前提是当前版本支持 remote MCP | 通常可直接连接 |
+| Claude Desktop | 取决于版本 | 支持 remote MCP 时可直接连接 |
+| Cline / Roo / VS Code MCP 插件 | 取决于插件版本 | 有的可直接连，有的只支持 stdio |
+| Continue | 取决于版本 | 有的可直接连，有的要看配置能力 |
+| Claude Code / Codex / Agent Runner | 取决于产品能力 | 只有支持 remote MCP 注册时才能直连 |
+
+经验判断：
+- 如果产品让你填 URL + headers，通常就能直接接这个服务
+- 如果产品只让你填本地 `command`，那它就是 stdio-only，需要 bridge
 
 ### Cursor
 
