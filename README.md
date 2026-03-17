@@ -1,7 +1,7 @@
 # Bianbu MCP Proxy
 
 <p align="center">
-  <b>Expose a Bianbu OS host as a remote MCP server over HTTP/HTTPS.</b>
+  <b>Expose a Bianbu Cloud 云主机 as a remote MCP server over HTTP/HTTPS.</b>
 </p>
 
 <p align="center">
@@ -12,7 +12,7 @@
 
 This project gives you:
 
-- one-file deployment on a Bianbu OS / Debian-like host
+- one-file deployment on a Bianbu Cloud 云主机（Debian-like environment）
 - stateless Streamable HTTP MCP server suitable for platform gateways
 - file operations, binary upload/download, and command execution
 - optional root-capable MCP calls through `as_root: true`
@@ -28,7 +28,7 @@ This project gives you:
 
 ## Quick start
 
-On the remote Bianbu OS host:
+On the remote Bianbu Cloud 云主机:
 
 ```bash
 bash bianbu_agent_proxy.sh
