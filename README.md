@@ -157,14 +157,50 @@ In short:
 
 ## AI IDE setup
 
-For almost all MCP-capable IDEs, the fields are the same:
+### Quick copy-paste connection block
 
-- transport: `http` or `streamable http`
-- URL: `https://your-domain.example.com/mcp`
-- header name: `X-API-KEY`
-- header value: your gateway key
+Use these values wherever an IDE asks for remote MCP connection details:
+
+```text
+Name: bianbu
+Transport: HTTP / Streamable HTTP
+URL: https://your-domain.example.com/mcp
+Header: X-API-KEY
+Value: your-x-api-key
+```
+
+Minimal JSON form:
+
+```json
+{
+  "mcpServers": {
+    "bianbu": {
+      "type": "http",
+      "url": "https://your-domain.example.com/mcp",
+      "headers": {
+        "X-API-KEY": "your-x-api-key"
+      }
+    }
+  }
+}
+```
 
 If an IDE insists on a local executable `command`, it expects a local stdio MCP server and cannot use this remote HTTP endpoint directly.
+
+### Compatibility matrix
+
+| Tool | Direct remote HTTP MCP | Typical status |
+|---|---|---|
+| Cursor | Yes, if build supports remote MCP | usually direct |
+| Windsurf | Yes, if build supports remote MCP | usually direct |
+| Claude Desktop | Version-dependent | direct if remote MCP is supported |
+| Cline / Roo / VS Code MCP clients | Version-dependent | sometimes direct, sometimes stdio-only |
+| Continue | Version-dependent | sometimes direct, sometimes config-dependent |
+| Claude Code / Codex / agent runners | Version-dependent | direct only if remote MCP registration exists |
+
+Rule of thumb:
+- if the product asks for URL + headers, you can usually connect directly
+- if the product asks for a local `command`, it is stdio-only and needs a bridge
 
 ### Cursor
 
