@@ -14,7 +14,7 @@ What this gives you:
 ## Repository contents
 
 - `bianbu_agent_proxy.sh` — deploy, repair, recover, and manage the remote MCP service
-- `examples/client/` — minimal Node client examples and test scripts
+- `examples/client/` — minimal Node client examples for normal and root-capable usage
 
 ## Quick start
 
@@ -177,9 +177,12 @@ Important compatibility note:
 
 ### Cursor
 
-If your Cursor build supports remote MCP servers, add a server entry in Cursor MCP settings using your remote URL and header.
+Typical config location:
+- macOS: `~/Library/Application Support/Cursor/User/globalStorage/anysphere.cursor/mcp.json`
+- Windows: `%APPDATA%/Cursor/User/globalStorage/anysphere.cursor/mcp.json`
+- Linux: `~/.config/Cursor/User/globalStorage/anysphere.cursor/mcp.json`
 
-Conceptually:
+Example:
 
 ```json
 {
@@ -195,13 +198,16 @@ Conceptually:
 }
 ```
 
-If your Cursor version only supports local stdio MCP config, use a local MCP bridge that forwards stdio to this remote HTTP endpoint.
+If your Cursor build only accepts local `command`-style MCP servers, it does not yet support this remote endpoint directly.
 
 ### Windsurf
 
-Add the same remote MCP server in Windsurf's MCP configuration if your version supports HTTP MCP.
+Typical config location:
+- macOS: `~/Library/Application Support/Windsurf/User/globalStorage/codeium.windsurf/mcp.json`
+- Windows: `%APPDATA%/Windsurf/User/globalStorage/codeium.windsurf/mcp.json`
+- Linux: `~/.config/Windsurf/User/globalStorage/codeium.windsurf/mcp.json`
 
-Conceptually:
+Example:
 
 ```json
 {
@@ -217,44 +223,97 @@ Conceptually:
 }
 ```
 
-### Cline / Roo Code / other VS Code MCP extensions
+### Cline / Roo Code / VS Code MCP clients
 
-Many VS Code MCP clients historically prefer stdio/local servers. If your extension already supports remote HTTP MCP, use the same shape as above.
+These clients commonly store MCP config in workspace or user settings JSON, often under one of these places:
+- `.vscode/settings.json`
+- extension-specific MCP settings UI
+- extension-specific JSON file under VS Code user data
 
-If it only supports stdio, there are two workable patterns:
-- run a small local MCP bridge that forwards stdio to the remote URL
-- use the included Node examples here as the basis for a custom bridge
+Use the same server definition if the extension supports remote HTTP MCP:
 
-### Claude Desktop / Claude Code / other Anthropic MCP clients
+```json
+{
+  "mcpServers": {
+    "bianbu": {
+      "type": "http",
+      "url": "https://your-domain.example.com/mcp",
+      "headers": {
+        "X-API-KEY": "your-x-api-key"
+      }
+    }
+  }
+}
+```
 
-If the client supports remote HTTP MCP directly, configure:
+If the extension only supports local stdio MCP servers, it cannot use this remote endpoint directly.
+
+### Claude Desktop
+
+Typical config location:
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%/Claude/claude_desktop_config.json`
+
+If your Claude Desktop build supports remote MCP, use:
+
+```json
+{
+  "mcpServers": {
+    "bianbu": {
+      "type": "http",
+      "url": "https://your-domain.example.com/mcp",
+      "headers": {
+        "X-API-KEY": "your-x-api-key"
+      }
+    }
+  }
+}
+```
+
+If it only supports local `command` servers, it needs a bridge and cannot point directly at the remote URL.
+
+### Claude Code / Codex / OpenAI-style agent runners
+
+If the tool supports remote MCP registration, the connection info is simply:
+- transport: HTTP / Streamable HTTP
 - URL: `https://your-domain.example.com/mcp`
-- header `X-API-KEY`
+- header: `X-API-KEY`
 
-If it only supports local stdio MCP, run a local adapter process that forwards requests to the remote endpoint.
-
-### OpenAI / Codex-style agent runners
-
-For agent runners that can call remote MCP over HTTP, register this endpoint directly with:
-- server URL
-- `X-API-KEY`
-
-For runners that only launch local MCP commands, place a tiny bridge in front of this server.
+If the tool only supports launching local MCP commands, it will need a local bridge and cannot use the remote URL directly.
 
 ### Continue
 
-If your Continue build supports remote MCP or HTTP-based tool servers, use the same URL + header pattern.
-If not, use a local bridge process.
+Continue configuration is often stored in:
+- `~/.continue/config.json`
+- `~/.continue/config.yaml`
+- workspace-level Continue config depending on version
 
-### What to tell users of any IDE
+If your build supports remote MCP, use the same HTTP server definition:
 
-If an IDE asks for MCP connection fields, the answer is usually just:
-- transport: HTTP / Streamable HTTP
+```json
+{
+  "mcpServers": {
+    "bianbu": {
+      "type": "http",
+      "url": "https://your-domain.example.com/mcp",
+      "headers": {
+        "X-API-KEY": "your-x-api-key"
+      }
+    }
+  }
+}
+```
+
+### Minimal rule of thumb
+
+If an AI IDE asks for these fields, fill them like this:
+- transport: HTTP or Streamable HTTP
+- name: `bianbu`
 - URL: `https://your-domain.example.com/mcp`
 - header name: `X-API-KEY`
 - header value: your gateway key
 
-If the IDE insists on a `command` instead of a URL, that IDE is expecting a local stdio MCP server rather than a remote HTTP MCP server.
+If the AI IDE insists on a local executable `command`, then that IDE is expecting stdio MCP only and does not directly support this remote HTTP server.
 
 ## Recommended gateway pacing
 
@@ -277,8 +336,7 @@ In `examples/client/`:
 ```bash
 npm install
 npm run test:stateless
-npm run test:stateful
-node test-root-tools.mjs
+npm run test:root
 ```
 
 The example scripts expect:
