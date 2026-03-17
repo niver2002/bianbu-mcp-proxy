@@ -1,0 +1,17 @@
+{
+  "name": "mcp_client_test",
+  "version": "1.1.0",
+  "description": "Bianbu MCP client verification scripts",
+  "type": "module",
+  "scripts": {
+    "test:stateless": "node test-remote-mcp-platform-only.mjs",
+    "test:stateful": "node test-remote-mcp.mjs",
+    "test:stateful-raw": "node test-remote-mcp-session-raw.mjs",
+    "test:root": "node test-root-tools.mjs",
+    "debug:handshake": "node debug-mcp-handshake.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "zod": "^4.0.0"
+  }
+}
