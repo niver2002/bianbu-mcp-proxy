@@ -1,7 +1,7 @@
 # Bianbu MCP Proxy
 
 <p align="center">
-  <b>把一台 Bianbu OS 主机暴露成可供 AI IDE 使用的远程 MCP 服务。</b>
+  <b>把一台 Bianbu Cloud 云主机暴露成可供 AI IDE 使用的远程 MCP 服务。</b>
 </p>
 
 <p align="center">
@@ -12,7 +12,7 @@
 
 这个项目解决的是：
 
-- 一台远端 Bianbu OS 主机，如何一键部署成 MCP 服务
+- 一台远端 Bianbu Cloud 云主机，如何一键部署成 MCP 服务
 - 如何通过 HTTP/HTTPS 暴露给 Cursor、Windsurf、Claude Desktop 等 AI IDE
 - 如何让 MCP 具备文件操作、命令执行，甚至 `as_root: true` 的远程提权能力
 
@@ -32,7 +32,7 @@
 
 ## 一键部署
 
-在远端 Bianbu OS 主机上，最短启动命令就是：
+在远端 Bianbu Cloud 云主机上，最短启动命令就是：
 
 ```bash
 bash bianbu_agent_proxy.sh
