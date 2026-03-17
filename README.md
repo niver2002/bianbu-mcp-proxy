@@ -1,10 +1,19 @@
 # Bianbu MCP Proxy
 
-Public deployment script and client examples for exposing a Bianbu OS host as a remote MCP server over HTTP/HTTPS.
+<p align="center">
+  <b>Expose a Bianbu OS host as a remote MCP server over HTTP/HTTPS.</b>
+</p>
 
-What this gives you:
+<p align="center">
+  English | <a href="./README.zh-CN.md">简体中文</a>
+</p>
+
+## Overview
+
+This project gives you:
+
 - one-file deployment on a Bianbu OS / Debian-like host
-- stateless Streamable HTTP MCP server, suitable for platform gateways
+- stateless Streamable HTTP MCP server suitable for platform gateways
 - file operations, binary upload/download, and command execution
 - optional root-capable MCP calls through `as_root: true`
 - auto `sudo` setup for the runtime user during bootstrap
@@ -15,6 +24,7 @@ What this gives you:
 
 - `bianbu_agent_proxy.sh` — deploy, repair, recover, and manage the remote MCP service
 - `examples/client/` — minimal Node client examples for normal and root-capable usage
+- `pic/` — screenshots showing where users obtain the remote MCP URL and API key
 
 ## Quick start
 
@@ -24,7 +34,7 @@ On the remote Bianbu OS host:
 bash bianbu_agent_proxy.sh
 ```
 
-The script now defaults to `up`, which runs the full recovery/bootstrap flow.
+The script defaults to `up`, which runs the full recovery/bootstrap flow.
 
 If the file may have CRLF line endings, this also works:
 
@@ -44,17 +54,21 @@ bash bianbu_agent_proxy.sh logs
 bash bianbu_agent_proxy.sh show-config
 ```
 
-Practical meaning:
-- `up` → default full recovery path
-- `bootstrap` → install and deploy from scratch
-- `repair` → re-enable and restart the service, then wait for health
-- `recover` → full rebuild/recovery
+Quick meaning:
 
-## Remote deployment behavior
+| Command | Meaning |
+|---|---|
+| `up` | default full recovery path |
+| `bootstrap` | install and deploy from scratch |
+| `repair` | re-enable and restart the service, then wait for health |
+| `recover` | full rebuild/recovery |
+| `status` | show systemd service status |
+| `logs` | show service logs |
 
-The script is designed for a mostly clean Bianbu OS / Debian-like machine.
+## Deployment behavior
 
-During bootstrap it will:
+During bootstrap the script will:
+
 - install `nodejs`, `npm`, `curl`, `ca-certificates`, `python3`, `sudo`
 - generate the MCP server app under `/opt/bianbu-mcp-server`
 - install dependencies
@@ -64,26 +78,117 @@ During bootstrap it will:
 - wait for `http://127.0.0.1:$PORT/health` before declaring success
 
 Important:
+
 - if you are not root, the script uses `sudo`
 - the user must already have sudo rights on the remote machine
-- the script cannot magically bootstrap a machine where the current user has no sudo access at all
+- the script cannot bootstrap a machine where the current user has no sudo access at all
 
-## Environment variables
+## Client configuration
 
-Common deployment variables:
+For normal client usage you only need:
+
+- remote MCP URL
+- gateway `X-API-KEY`
+
+Example:
 
 ```bash
-HOST=0.0.0.0
-PORT=11434
-MCP_PATH=/mcp
-MCP_TRANSPORT_MODE=stateless
-RUN_USER=bianbu
-RUN_GROUP=bianbu
-FILE_ROOT=/home/bianbu
-ENABLE_PASSWORDLESS_SUDO=true
-TLS_CERT_FILE=
-TLS_KEY_FILE=
+export MCP_SERVER_URL='https://your-domain.example.com/mcp'
+export MCP_GATEWAY_KEY='your-x-api-key'
 ```
+
+## AI IDE setup
+
+For almost all MCP-capable IDEs, the connection details are just:
+
+- transport: HTTP or Streamable HTTP
+- URL: `https://your-domain.example.com/mcp`
+- header name: `X-API-KEY`
+- header value: your gateway key
+
+If an IDE insists on a local executable `command`, that IDE expects a local stdio MCP server and cannot use this remote HTTP endpoint directly.
+
+### Cursor
+
+Typical config location:
+- macOS: `~/Library/Application Support/Cursor/User/globalStorage/anysphere.cursor/mcp.json`
+- Windows: `%APPDATA%/Cursor/User/globalStorage/anysphere.cursor/mcp.json`
+- Linux: `~/.config/Cursor/User/globalStorage/anysphere.cursor/mcp.json`
+
+```json
+{
+  "mcpServers": {
+    "bianbu": {
+      "type": "http",
+      "url": "https://your-domain.example.com/mcp",
+      "headers": {
+        "X-API-KEY": "your-x-api-key"
+      }
+    }
+  }
+}
+```
+
+### Windsurf
+
+Typical config location:
+- macOS: `~/Library/Application Support/Windsurf/User/globalStorage/codeium.windsurf/mcp.json`
+- Windows: `%APPDATA%/Windsurf/User/globalStorage/codeium.windsurf/mcp.json`
+- Linux: `~/.config/Windsurf/User/globalStorage/codeium.windsurf/mcp.json`
+
+Use the same JSON structure as Cursor.
+
+### Claude Desktop
+
+Typical config location:
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%/Claude/claude_desktop_config.json`
+
+If your build supports remote MCP, use the same URL + header format.
+
+### Cline / Roo Code / VS Code MCP clients
+
+Common config locations:
+- `.vscode/settings.json`
+- extension-specific MCP settings UI
+- extension-specific JSON files under VS Code user data
+
+If the extension supports remote HTTP MCP, use the same server definition. If it only supports local stdio MCP, it cannot use this endpoint directly.
+
+### Continue / Claude Code / Codex-style runners
+
+If the tool supports remote MCP registration, use the same URL + header pattern. If it only supports local command-based MCP, it needs a local bridge.
+
+## How users obtain the MCP URL and key
+
+The `pic/` directory contains the UI flow.
+
+### ① Open the instance page to find the MCP host
+
+![Step 1: open your instance page](./pic/1.png)
+
+The instance page is where users enter the device details page.
+
+### ② Open API Key and copy the key value
+
+![Step 2: open API Key and copy it](./pic/2.png)
+
+Users should open the `API Key` page and copy the full key value. This becomes the `X-API-KEY` used by MCP clients.
+
+### ③ Open Local Connection and derive the MCP URL
+
+![Step 3: derive the MCP URL from the domain](./pic/3.png)
+
+Users should open `Local Connection`, find the full domain, and build the MCP endpoint as:
+
+```text
+https://<that-domain>/mcp
+```
+
+In short:
+
+- MCP URL = `https://<domain>/mcp`
+- MCP key = the value shown in `API Key`
 
 ## Exposed MCP tools
 
@@ -117,8 +222,6 @@ Supported for:
 - `delete_path`
 - `run_command`
 
-Examples:
-
 Read a root-owned file:
 
 ```json
@@ -147,179 +250,9 @@ Run a root shell command:
 }
 ```
 
-## Client configuration
-
-For normal client usage you only need:
-- remote MCP URL
-- gateway `X-API-KEY`
-
-Example env:
-
-```bash
-export MCP_SERVER_URL='https://your-domain.example.com/mcp'
-export MCP_GATEWAY_KEY='your-x-api-key'
-```
-
-## Using from major AI IDEs and agent tools
-
-For nearly all MCP-capable clients, the only connection details you need are:
-- MCP server URL
-- `X-API-KEY`
-
-In this project that means:
-- URL: `https://your-domain.example.com/mcp`
-- header: `X-API-KEY: your-x-api-key`
-
-Important compatibility note:
-- this server is a remote HTTP MCP endpoint
-- tools that support remote Streamable HTTP MCP can connect directly
-- tools that only support local stdio MCP servers need a small bridge/proxy layer first
-
-### Cursor
-
-Typical config location:
-- macOS: `~/Library/Application Support/Cursor/User/globalStorage/anysphere.cursor/mcp.json`
-- Windows: `%APPDATA%/Cursor/User/globalStorage/anysphere.cursor/mcp.json`
-- Linux: `~/.config/Cursor/User/globalStorage/anysphere.cursor/mcp.json`
-
-Example:
-
-```json
-{
-  "mcpServers": {
-    "bianbu": {
-      "type": "http",
-      "url": "https://your-domain.example.com/mcp",
-      "headers": {
-        "X-API-KEY": "your-x-api-key"
-      }
-    }
-  }
-}
-```
-
-If your Cursor build only accepts local `command`-style MCP servers, it does not yet support this remote endpoint directly.
-
-### Windsurf
-
-Typical config location:
-- macOS: `~/Library/Application Support/Windsurf/User/globalStorage/codeium.windsurf/mcp.json`
-- Windows: `%APPDATA%/Windsurf/User/globalStorage/codeium.windsurf/mcp.json`
-- Linux: `~/.config/Windsurf/User/globalStorage/codeium.windsurf/mcp.json`
-
-Example:
-
-```json
-{
-  "mcpServers": {
-    "bianbu": {
-      "type": "http",
-      "url": "https://your-domain.example.com/mcp",
-      "headers": {
-        "X-API-KEY": "your-x-api-key"
-      }
-    }
-  }
-}
-```
-
-### Cline / Roo Code / VS Code MCP clients
-
-These clients commonly store MCP config in workspace or user settings JSON, often under one of these places:
-- `.vscode/settings.json`
-- extension-specific MCP settings UI
-- extension-specific JSON file under VS Code user data
-
-Use the same server definition if the extension supports remote HTTP MCP:
-
-```json
-{
-  "mcpServers": {
-    "bianbu": {
-      "type": "http",
-      "url": "https://your-domain.example.com/mcp",
-      "headers": {
-        "X-API-KEY": "your-x-api-key"
-      }
-    }
-  }
-}
-```
-
-If the extension only supports local stdio MCP servers, it cannot use this remote endpoint directly.
-
-### Claude Desktop
-
-Typical config location:
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Windows: `%APPDATA%/Claude/claude_desktop_config.json`
-
-If your Claude Desktop build supports remote MCP, use:
-
-```json
-{
-  "mcpServers": {
-    "bianbu": {
-      "type": "http",
-      "url": "https://your-domain.example.com/mcp",
-      "headers": {
-        "X-API-KEY": "your-x-api-key"
-      }
-    }
-  }
-}
-```
-
-If it only supports local `command` servers, it needs a bridge and cannot point directly at the remote URL.
-
-### Claude Code / Codex / OpenAI-style agent runners
-
-If the tool supports remote MCP registration, the connection info is simply:
-- transport: HTTP / Streamable HTTP
-- URL: `https://your-domain.example.com/mcp`
-- header: `X-API-KEY`
-
-If the tool only supports launching local MCP commands, it will need a local bridge and cannot use the remote URL directly.
-
-### Continue
-
-Continue configuration is often stored in:
-- `~/.continue/config.json`
-- `~/.continue/config.yaml`
-- workspace-level Continue config depending on version
-
-If your build supports remote MCP, use the same HTTP server definition:
-
-```json
-{
-  "mcpServers": {
-    "bianbu": {
-      "type": "http",
-      "url": "https://your-domain.example.com/mcp",
-      "headers": {
-        "X-API-KEY": "your-x-api-key"
-      }
-    }
-  }
-}
-```
-
-### Minimal rule of thumb
-
-If an AI IDE asks for these fields, fill them like this:
-- transport: HTTP or Streamable HTTP
-- name: `bianbu`
-- URL: `https://your-domain.example.com/mcp`
-- header name: `X-API-KEY`
-- header value: your gateway key
-
-If the AI IDE insists on a local executable `command`, then that IDE is expecting stdio MCP only and does not directly support this remote HTTP server.
-
 ## Recommended gateway pacing
 
-Some gateways reject bursty traffic. The included client examples therefore use pacing and retries.
-
-Recommended stable defaults:
+Some gateways reject bursty traffic. Recommended stable defaults:
 
 ```bash
 export MCP_MIN_INTERVAL_MS=1000
@@ -327,7 +260,7 @@ export MCP_MAX_RETRIES=2
 export MCP_RETRY_BASE_MS=1000
 ```
 
-This corresponds to about 1 request per second, prioritized for stability.
+That is about 1 request per second, optimized for stability.
 
 ## Local client examples
 
@@ -339,7 +272,7 @@ npm run test:stateless
 npm run test:root
 ```
 
-The example scripts expect:
+Expected env vars:
 - `MCP_SERVER_URL`
 - `MCP_GATEWAY_KEY`
 
@@ -360,7 +293,7 @@ bash bianbu_agent_proxy.sh repair
 bash bianbu_agent_proxy.sh recover
 ```
 
-If the script file was uploaded from Windows and line endings are broken, run:
+If the script file was uploaded from Windows and line endings are broken:
 
 ```bash
 tr -d '\r' < bianbu_agent_proxy.sh | bash
@@ -376,308 +309,3 @@ tr -d '\r' < bianbu_agent_proxy.sh | bash
 ## License
 
 MIT
-
----
-
-# 中文说明
-
-这个仓库用于把一台 Bianbu OS 主机暴露成远程 MCP 服务，供各种支持 MCP 的 AI IDE / Agent 使用。
-
-核心能力：
-- 单文件部署
-- 通过 HTTP/HTTPS 暴露 MCP
-- 文件读写、目录管理、二进制上传下载、命令执行
-- 支持 `as_root: true` 的远程提权操作
-- 自动安装 systemd 服务并配置开机自启
-- 自动健康检查与恢复命令
-
-## 一、远端一键部署
-
-在远端 Bianbu OS 主机上，最短启动命令就是：
-
-```bash
-bash bianbu_agent_proxy.sh
-```
-
-现在脚本默认就是 `up`，会自动走完整恢复 / 部署流程。
-
-如果你怀疑文件是从 Windows 上传过来的，带了 CRLF 换行，可以用：
-
-```bash
-tr -d '\r' < bianbu_agent_proxy.sh | bash
-```
-
-### 远端脚本会自动做什么
-
-执行后会自动：
-- 安装 `nodejs`、`npm`、`curl`、`ca-certificates`、`python3`、`sudo`
-- 生成 MCP server 到 `/opt/bianbu-mcp-server`
-- 安装 Node 依赖
-- 配置 systemd 服务
-- 配置开机自启动
-- 为运行用户配置免密码 sudo（默认开启）
-- 启动后自动检查本机 `http://127.0.0.1:11434/health`
-
-### 远端使用前提
-
-脚本支持两种情况：
-
-① 当前就是 root
-
-② 当前不是 root，但当前用户本来就有 sudo 权限
-
-注意：
-- 脚本可以自动调用 sudo
-- 但如果当前用户本身没有 sudo 权限，脚本无法凭空越权
-
-## 二、最常用命令
-
-```bash
-bash bianbu_agent_proxy.sh up
-bash bianbu_agent_proxy.sh bootstrap
-bash bianbu_agent_proxy.sh repair
-bash bianbu_agent_proxy.sh recover
-bash bianbu_agent_proxy.sh status
-bash bianbu_agent_proxy.sh logs
-bash bianbu_agent_proxy.sh show-config
-```
-
-含义：
-- `up`：默认完整恢复流程
-- `bootstrap`：从零安装并部署
-- `repair`：尝试修复并拉起服务
-- `recover`：完整重建恢复
-- `status`：查看 systemd 状态
-- `logs`：查看服务日志
-
-## 三、本地客户端真正需要什么
-
-在本地 AI IDE / MCP 客户端里，通常只需要两个东西：
-
-```text
-MCP_SERVER_URL
-MCP_GATEWAY_KEY
-```
-
-也就是：
-- 远端 URL，例如 `https://your-domain.example.com/mcp`
-- 网关层的 `X-API-KEY`
-
-一般不需要远端 root 密码。
-
-root 密码只和“首次部署 / 远端人工维护”有关，不是客户端调用时必须提供的字段。
-
-## 四、AI IDE 里怎么配置
-
-对大多数支持远程 HTTP MCP 的 AI IDE，核心填写项都是：
-
-- transport: `http` 或 `streamable http`
-- URL: `https://your-domain.example.com/mcp`
-- header 名称：`X-API-KEY`
-- header 值：你的网关 key
-
-如果某个 IDE 强制你填写本地 `command`，那说明它只支持本地 stdio MCP，不支持直接连接这个远程 HTTP MCP 服务。
-
-### 1. Cursor
-
-常见配置路径：
-- macOS: `~/Library/Application Support/Cursor/User/globalStorage/anysphere.cursor/mcp.json`
-- Windows: `%APPDATA%/Cursor/User/globalStorage/anysphere.cursor/mcp.json`
-- Linux: `~/.config/Cursor/User/globalStorage/anysphere.cursor/mcp.json`
-
-示例：
-
-```json
-{
-  "mcpServers": {
-    "bianbu": {
-      "type": "http",
-      "url": "https://your-domain.example.com/mcp",
-      "headers": {
-        "X-API-KEY": "your-x-api-key"
-      }
-    }
-  }
-}
-```
-
-### 2. Windsurf
-
-常见配置路径：
-- macOS: `~/Library/Application Support/Windsurf/User/globalStorage/codeium.windsurf/mcp.json`
-- Windows: `%APPDATA%/Windsurf/User/globalStorage/codeium.windsurf/mcp.json`
-- Linux: `~/.config/Windsurf/User/globalStorage/codeium.windsurf/mcp.json`
-
-示例同 Cursor：
-
-```json
-{
-  "mcpServers": {
-    "bianbu": {
-      "type": "http",
-      "url": "https://your-domain.example.com/mcp",
-      "headers": {
-        "X-API-KEY": "your-x-api-key"
-      }
-    }
-  }
-}
-```
-
-### 3. Cline / Roo Code / VS Code MCP 插件
-
-这类客户端常见配置位置：
-- `.vscode/settings.json`
-- 插件自己的 MCP 配置面板
-- VS Code 用户数据目录下的插件配置文件
-
-如果插件支持远程 HTTP MCP，就可以按同样结构填写。
-如果它只支持本地 stdio MCP，就不能直接连这个远端地址。
-
-### 4. Claude Desktop
-
-常见配置路径：
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- Windows: `%APPDATA%/Claude/claude_desktop_config.json`
-
-如果版本支持远程 MCP，也可以写成同样的 URL + header 形式。
-
-### 5. Claude Code / Codex / OpenAI 风格 Agent Runner
-
-如果这些工具支持远程 MCP 注册，填写规则一样：
-- URL
-- `X-API-KEY`
-
-如果只支持本地命令型 MCP，就需要一个额外 bridge 才能接远程 HTTP MCP。
-
-### 6. Continue
-
-常见配置路径：
-- `~/.continue/config.json`
-- `~/.continue/config.yaml`
-- 某些版本也可能有工作区级配置
-
-如果当前版本支持远程 MCP，填写方式同上。
-
-## 五、支持的 MCP Tools
-
-当前暴露的工具：
-
-- `health`
-- `list_directory`
-- `read_text_file`
-- `write_text_file`
-- `upload_binary_file`
-- `download_binary_file`
-- `make_directory`
-- `delete_path`
-- `run_command`
-
-## 六、root 提权怎么用
-
-大多数工具支持：
-
-```json
-{
-  "as_root": true
-}
-```
-
-支持 root 的工具包括：
-- `list_directory`
-- `read_text_file`
-- `write_text_file`
-- `upload_binary_file`
-- `download_binary_file`
-- `make_directory`
-- `delete_path`
-- `run_command`
-
-### root 文件读取示例
-
-```json
-{
-  "name": "read_text_file",
-  "arguments": {
-    "path": "/root/secret.txt",
-    "max_bytes": 8192,
-    "encoding": "utf-8",
-    "as_root": true
-  }
-}
-```
-
-### root 命令执行示例
-
-```json
-{
-  "name": "run_command",
-  "arguments": {
-    "command": "id && whoami",
-    "cwd": "/",
-    "timeout_seconds": 30,
-    "as_root": true
-  }
-}
-```
-
-## 七、推荐的稳定访问频率
-
-部分网关对突发请求敏感，所以客户端最好做节流。
-
-推荐默认值：
-
-```bash
-export MCP_MIN_INTERVAL_MS=1000
-export MCP_MAX_RETRIES=2
-export MCP_RETRY_BASE_MS=1000
-```
-
-也就是大约 1 PPS，优先稳定。
-
-## 八、本地示例脚本怎么跑
-
-仓库里的最小示例在：
-
-`examples/client/`
-
-使用方法：
-
-```bash
-cd examples/client
-npm install
-export MCP_SERVER_URL='https://your-domain.example.com/mcp'
-export MCP_GATEWAY_KEY='your-x-api-key'
-npm run test:stateless
-npm run test:root
-```
-
-## 九、健康检查与排障
-
-远端本机检查：
-
-```bash
-curl http://127.0.0.1:11434/health
-```
-
-常用排障命令：
-
-```bash
-bash bianbu_agent_proxy.sh status
-bash bianbu_agent_proxy.sh logs
-bash bianbu_agent_proxy.sh repair
-bash bianbu_agent_proxy.sh recover
-```
-
-如果是 Windows 上传导致换行符问题，可以直接：
-
-```bash
-tr -d '\r' < bianbu_agent_proxy.sh | bash
-```
-
-## 十、安全说明
-
-- 认证默认依赖外层网关的 `X-API-KEY`
-- 脚本默认不再额外加第二层 token
-- `as_root: true` 权限很高，只应暴露在可信网关之后
-- 给运行用户配置 passwordless sudo 是为了支持远程 root MCP 操作，这本身是一个安全权衡
