@@ -160,6 +160,102 @@ export MCP_SERVER_URL='https://your-domain.example.com/mcp'
 export MCP_GATEWAY_KEY='your-x-api-key'
 ```
 
+## Using from major AI IDEs and agent tools
+
+For nearly all MCP-capable clients, the only connection details you need are:
+- MCP server URL
+- `X-API-KEY`
+
+In this project that means:
+- URL: `https://your-domain.example.com/mcp`
+- header: `X-API-KEY: your-x-api-key`
+
+Important compatibility note:
+- this server is a remote HTTP MCP endpoint
+- tools that support remote Streamable HTTP MCP can connect directly
+- tools that only support local stdio MCP servers need a small bridge/proxy layer first
+
+### Cursor
+
+If your Cursor build supports remote MCP servers, add a server entry in Cursor MCP settings using your remote URL and header.
+
+Conceptually:
+
+```json
+{
+  "mcpServers": {
+    "bianbu": {
+      "type": "http",
+      "url": "https://your-domain.example.com/mcp",
+      "headers": {
+        "X-API-KEY": "your-x-api-key"
+      }
+    }
+  }
+}
+```
+
+If your Cursor version only supports local stdio MCP config, use a local MCP bridge that forwards stdio to this remote HTTP endpoint.
+
+### Windsurf
+
+Add the same remote MCP server in Windsurf's MCP configuration if your version supports HTTP MCP.
+
+Conceptually:
+
+```json
+{
+  "mcpServers": {
+    "bianbu": {
+      "type": "http",
+      "url": "https://your-domain.example.com/mcp",
+      "headers": {
+        "X-API-KEY": "your-x-api-key"
+      }
+    }
+  }
+}
+```
+
+### Cline / Roo Code / other VS Code MCP extensions
+
+Many VS Code MCP clients historically prefer stdio/local servers. If your extension already supports remote HTTP MCP, use the same shape as above.
+
+If it only supports stdio, there are two workable patterns:
+- run a small local MCP bridge that forwards stdio to the remote URL
+- use the included Node examples here as the basis for a custom bridge
+
+### Claude Desktop / Claude Code / other Anthropic MCP clients
+
+If the client supports remote HTTP MCP directly, configure:
+- URL: `https://your-domain.example.com/mcp`
+- header `X-API-KEY`
+
+If it only supports local stdio MCP, run a local adapter process that forwards requests to the remote endpoint.
+
+### OpenAI / Codex-style agent runners
+
+For agent runners that can call remote MCP over HTTP, register this endpoint directly with:
+- server URL
+- `X-API-KEY`
+
+For runners that only launch local MCP commands, place a tiny bridge in front of this server.
+
+### Continue
+
+If your Continue build supports remote MCP or HTTP-based tool servers, use the same URL + header pattern.
+If not, use a local bridge process.
+
+### What to tell users of any IDE
+
+If an IDE asks for MCP connection fields, the answer is usually just:
+- transport: HTTP / Streamable HTTP
+- URL: `https://your-domain.example.com/mcp`
+- header name: `X-API-KEY`
+- header value: your gateway key
+
+If the IDE insists on a `command` instead of a URL, that IDE is expecting a local stdio MCP server rather than a remote HTTP MCP server.
+
 ## Recommended gateway pacing
 
 Some gateways reject bursty traffic. The included client examples therefore use pacing and retries.
